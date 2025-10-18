@@ -14,7 +14,8 @@ function App() {
     principalDiario: 14000,
     motosIniciales: 1,
     dias: 1560,
-    diasPorMes: 26
+    diasPorMes: 26,
+    tipoCashDisponible: 'pagoRecibido'
   });
 
   const { dailyData, monthlyData, summary, isCalculating } = useSimulationLogic(params);

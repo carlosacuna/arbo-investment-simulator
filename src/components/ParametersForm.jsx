@@ -9,11 +9,16 @@ export const ParametersForm = ({ onParametersChange }) => {
     principalDiario: 14000,
     motosIniciales: 1,
     dias: 1560,
-    diasPorMes: 26
+    diasPorMes: 26,
+    tipoCashDisponible: 'pagoRecibido'
   });
 
   const handleChange = (field, value) => {
-    const newParams = { ...params, [field]: parseFloat(value) || 0 };
+    let processedValue = value;
+    if (field !== 'tipoCashDisponible') {
+      processedValue = parseFloat(value) || 0;
+    }
+    const newParams = { ...params, [field]: processedValue };
     setParams(newParams);
     onParametersChange(newParams);
   };
@@ -44,6 +49,34 @@ export const ParametersForm = ({ onParametersChange }) => {
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full opacity-60"></div>
+        </div>
+      </div>
+      <p className="text-xs text-gray-600 mt-1.5 font-medium">{helperText}</p>
+    </div>
+  );
+
+  const SelectField = ({ label, value, onChange, options, helperText, icon }) => (
+    <div className="bg-gradient-to-br from-white to-gray-50 p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+      <label className="flex items-center text-xs font-semibold text-gray-700 mb-2">
+        {icon && <span className="mr-2 text-blue-600">{icon}</span>}
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={onChange}
+          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-medium text-gray-900 appearance-none cursor-pointer"
+        >
+          {options.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </div>
       <p className="text-xs text-gray-600 mt-1.5 font-medium">{helperText}</p>
@@ -119,7 +152,7 @@ export const ParametersForm = ({ onParametersChange }) => {
             <div className="w-8 h-0.5 bg-gradient-to-r from-green-500 to-green-300 mr-3"></div>
             <h3 className="text-xl font-bold text-gray-800">Configuración de Simulación</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <InputField
               label="Motos Iniciales"
               value={params.motosIniciales}
@@ -150,6 +183,19 @@ export const ParametersForm = ({ onParametersChange }) => {
               helperText={`${params.diasPorMes} días por mes`}
               icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>}
+            />
+            <SelectField
+              label="Tipo Cash Disponible"
+              value={params.tipoCashDisponible}
+              onChange={(e) => handleChange('tipoCashDisponible', e.target.value)}
+              options={[
+                { value: 'pagoRecibido', label: 'Pago Recibido' },
+                { value: 'interesGanado', label: 'Interés Ganado' }
+              ]}
+              helperText={params.tipoCashDisponible === 'pagoRecibido' ? 'Acumula pagos totales' : 'Solo acumula interés'}
+              icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>}
             />
           </div>

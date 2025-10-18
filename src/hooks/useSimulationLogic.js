@@ -39,7 +39,8 @@ const calculateSimulation = (params) => {
     principalDiario = 14000,       // Principal devuelto por moto al día
     motosIniciales = 1,            // Motos iniciales
     dias = 1560,                   // Días de simulación (5 años aprox)
-    diasPorMes = 26                // Días por mes para cálculos mensuales
+    diasPorMes = 26,               // Días por mes para cálculos mensuales
+    tipoCashDisponible = 'pagoRecibido'  // Tipo de acumulación para cash disponible
   } = params;
 
   const daily = [];
@@ -57,8 +58,12 @@ const calculateSimulation = (params) => {
     const interesGanado = motosActivas * interesDiario;
     const principalDevuelto = motosActivas * principalDiario;
 
-    // El cash se acumula con el interés ganado (no con el principal)
-    cashDisponible += interesGanado;
+    // El cash se acumula según el tipo configurado
+    if (tipoCashDisponible === 'pagoRecibido') {
+      cashDisponible += pagoRecibido;
+    } else {
+      cashDisponible += interesGanado;
+    }
 
     // Verificar si se puede comprar una nueva moto
     let nuevasMotos = 0;
