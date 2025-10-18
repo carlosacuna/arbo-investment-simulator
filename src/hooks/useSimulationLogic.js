@@ -38,7 +38,8 @@ const calculateSimulation = (params) => {
     interesDiario = 7000,          // Interés (ganancia) por moto al día
     principalDiario = 14000,       // Principal devuelto por moto al día
     motosIniciales = 1,            // Motos iniciales
-    dias = 1560                    // Días de simulación (5 años aprox)
+    dias = 1560,                   // Días de simulación (5 años aprox)
+    diasPorMes = 26                // Días por mes para cálculos mensuales
   } = params;
 
   const daily = [];
@@ -69,7 +70,7 @@ const calculateSimulation = (params) => {
     }
 
     // Guardar datos diarios
-    const mesAprox = Math.ceil(dia / 26); // Aproximadamente 26 días por mes
+    const mesAprox = Math.ceil(dia / diasPorMes); // Usar días por mes configurados
     daily.push({
       dia,
       mes: mesAprox,
@@ -83,10 +84,10 @@ const calculateSimulation = (params) => {
     });
 
     // Agregar datos mensuales (al final de cada mes aproximado)
-    if (dia % 26 === 0 || dia === dias) {
-      const mesData = daily.slice(-26).reduce((acc, day) => ({
+    if (dia % diasPorMes === 0 || dia === dias) {
+      const mesData = daily.slice(-diasPorMes).reduce((acc, day) => ({
         mes: mesAprox,
-        motosActivasPromedio: acc.motosActivasPromedio + day.motosActivas / Math.min(26, daily.length),
+        motosActivasPromedio: acc.motosActivasPromedio + day.motosActivas / Math.min(diasPorMes, daily.length),
         pagoRecibidoTotal: acc.pagoRecibidoTotal + day.pagoRecibido,
         interesGanadoTotal: acc.interesGanadoTotal + day.interesGanado,
         principalDevueltoTotal: acc.principalDevueltoTotal + day.principalDevuelto,

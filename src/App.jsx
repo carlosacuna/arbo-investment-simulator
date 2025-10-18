@@ -13,7 +13,8 @@ function App() {
     interesDiario: 7000,
     principalDiario: 14000,
     motosIniciales: 1,
-    dias: 1560
+    dias: 1560,
+    diasPorMes: 26
   });
 
   const { dailyData, monthlyData, summary, isCalculating } = useSimulationLogic(params);
