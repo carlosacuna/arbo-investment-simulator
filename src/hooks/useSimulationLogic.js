@@ -52,7 +52,6 @@ const calculateSimulation = (params) => {
   let motosTotales = motosIniciales;
   let cashDisponible = 0;
   let mesActual = 1;
-  let nuevasMotosEsteMes = 0; // Rastrear nuevas motos compradas en el mes actual
 
   // Variables para acumulados
   let pagoRecibidoAcumulado = 0;
@@ -64,8 +63,7 @@ const calculateSimulation = (params) => {
     
     // Si es un nuevo mes, las nuevas motos compradas el mes anterior ahora pueden generar ingresos
     if (mesAprox > mesActual) {
-      motosGenerandoIngresos = motosActivas; // Todas las motos activas ahora generan ingresos
-      nuevasMotosEsteMes = 0; // Reiniciar contador para el nuevo mes
+      motosGenerandoIngresos = motosActivas; // Todas las motas activas ahora generan ingresos
       mesActual = mesAprox;
     }
 
@@ -81,7 +79,6 @@ const calculateSimulation = (params) => {
       cashDisponible = cashDisponible % valorMoto; // Resto después de comprar
       motosTotales += nuevasMotos;
       motosActivas += nuevasMotos;
-      nuevasMotosEsteMes += nuevasMotos;
       // Las nuevas motos se activan hoy, pero NO generan ingresos hasta el mes siguiente
     }
 

@@ -1,5 +1,6 @@
-import React from 'react';
-export const SummaryCards = ({ summary }) => {
+import React, { memo } from 'react';
+
+export const SummaryCards = memo(({ summary }) => {
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -58,4 +59,6 @@ export const SummaryCards = ({ summary }) => {
       ))}
     </div>
   );
-};
+});
+
+SummaryCards.displayName = 'SummaryCards';

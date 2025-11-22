@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSimulationLogic } from './hooks/useSimulationLogic';
 import { ParametersForm } from './components/ParametersForm';
 import { SummaryCards } from './components/SummaryCards';
@@ -21,27 +21,23 @@ const defaultParams = {
 
 function App() {
   // Cargar parámetros desde localStorage al iniciar
-  const loadParams = () => {
+  const loadParams = useCallback(() => {
     try {
       const savedParams = localStorage.getItem(STORAGE_KEY);
       if (savedParams) {
         const parsed = JSON.parse(savedParams);
-        // Validar que todos los campos necesarios estén presentes
         return { ...defaultParams, ...parsed };
       }
     } catch (error) {
       console.error('Error al cargar parámetros desde localStorage:', error);
     }
     return defaultParams;
-  };
+  }, []);
 
-  // Parámetros del formulario (pueden cambiar sin disparar cálculos)
-  const [formParams, setFormParams] = useState(loadParams);
-  
-  // Parámetros de simulación (disparan cálculos cuando cambian)
+  // Solo un estado para la simulación
   const [simulationParams, setSimulationParams] = useState(loadParams);
 
-  // Guardar parámetros en localStorage cuando cambien los de simulación
+  // Guardar parámetros en localStorage cuando cambien
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(simulationParams));
@@ -50,23 +46,17 @@ function App() {
     }
   }, [simulationParams]);
 
-  // Función para aplicar cambios del formulario a la simulación
-  const handleApplyChanges = () => {
-    // Validar que todos los valores sean numéricos válidos
-    const validatedParams = {
-      ...formParams,
-      valorMoto: Number(formParams.valorMoto) || defaultParams.valorMoto,
-      pagoDiario: Number(formParams.pagoDiario) || defaultParams.pagoDiario,
-      interesDiario: Number(formParams.interesDiario) || defaultParams.interesDiario,
-      principalDiario: Number(formParams.principalDiario) || defaultParams.principalDiario,
-      motosIniciales: Number(formParams.motosIniciales) || defaultParams.motosIniciales,
-      dias: Number(formParams.dias) || defaultParams.dias,
-      diasPorMes: Number(formParams.diasPorMes) || defaultParams.diasPorMes,
-    };
+  // Handler memoizado para evitar re-renders del ParametersForm
+  const handleApplyChanges = useCallback((validatedParams) => {
     setSimulationParams(validatedParams);
-  };
+  }, []);
 
-  const { dailyData, monthlyData, summary, isCalculating } = useSimulationLogic(simulationParams);
+  const { monthlyData, summary, isCalculating } = useSimulationLogic(simulationParams);
+
+  // Memoizar datos para evitar re-renders innecesarios en componentes hijos
+  const memoizedSummary = useMemo(() => summary, [summary]);
+  const memoizedMonthlyData = useMemo(() => monthlyData, [monthlyData]);
+  const memoizedParams = useMemo(() => simulationParams, [simulationParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -93,9 +83,8 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <ParametersForm 
-          params={formParams} 
-          onParametersChange={setFormParams} 
+        <ParametersForm
+          params={memoizedParams}
           onApplyChanges={handleApplyChanges}
         />
 
@@ -105,10 +94,14 @@ function App() {
           </div>
         ) : (
           <>
-            <SummaryCards summary={summary} />
-            <SimulationChart monthlyData={monthlyData} />
-            <MonthlyTable monthlyData={monthlyData} />
-            <PDFExport params={simulationParams} summary={summary} monthlyData={monthlyData} />
+            <SummaryCards summary={memoizedSummary} />
+            <SimulationChart monthlyData={memoizedMonthlyData} />
+            <MonthlyTable monthlyData={memoizedMonthlyData} />
+            <PDFExport
+              params={memoizedParams}
+              summary={memoizedSummary}
+              monthlyData={memoizedMonthlyData}
+            />
           </>
         )}
       </main>

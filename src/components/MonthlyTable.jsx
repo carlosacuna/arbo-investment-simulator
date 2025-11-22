@@ -1,7 +1,6 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, memo } from 'react';
 
-export const MonthlyTable = ({ monthlyData }) => {
+export const MonthlyTable = memo(({ monthlyData }) => {
   const [showAll, setShowAll] = useState(false);
 
   const formatCurrency = (value) => {
@@ -98,4 +97,6 @@ export const MonthlyTable = ({ monthlyData }) => {
       </div>
     </div>
   );
-};
+});
+
+MonthlyTable.displayName = 'MonthlyTable';

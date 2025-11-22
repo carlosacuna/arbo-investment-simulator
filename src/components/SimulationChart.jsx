@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export const SimulationChart = ({ monthlyData }) => {
+export const SimulationChart = memo(({ monthlyData }) => {
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -70,4 +70,6 @@ export const SimulationChart = ({ monthlyData }) => {
       </ResponsiveContainer>
     </div>
   );
-};
+});
+
+SimulationChart.displayName = 'SimulationChart';
