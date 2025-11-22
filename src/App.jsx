@@ -21,7 +21,7 @@ const defaultParams = {
 
 function App() {
   // Cargar parámetros desde localStorage al iniciar
-  const [params, setParams] = useState(() => {
+  const loadParams = () => {
     try {
       const savedParams = localStorage.getItem(STORAGE_KEY);
       if (savedParams) {
@@ -33,18 +33,40 @@ function App() {
       console.error('Error al cargar parámetros desde localStorage:', error);
     }
     return defaultParams;
-  });
+  };
 
-  // Guardar parámetros en localStorage cuando cambien
+  // Parámetros del formulario (pueden cambiar sin disparar cálculos)
+  const [formParams, setFormParams] = useState(loadParams);
+  
+  // Parámetros de simulación (disparan cálculos cuando cambian)
+  const [simulationParams, setSimulationParams] = useState(loadParams);
+
+  // Guardar parámetros en localStorage cuando cambien los de simulación
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(params));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(simulationParams));
     } catch (error) {
       console.error('Error al guardar parámetros en localStorage:', error);
     }
-  }, [params]);
+  }, [simulationParams]);
 
-  const { dailyData, monthlyData, summary, isCalculating } = useSimulationLogic(params);
+  // Función para aplicar cambios del formulario a la simulación
+  const handleApplyChanges = () => {
+    // Validar que todos los valores sean numéricos válidos
+    const validatedParams = {
+      ...formParams,
+      valorMoto: Number(formParams.valorMoto) || defaultParams.valorMoto,
+      pagoDiario: Number(formParams.pagoDiario) || defaultParams.pagoDiario,
+      interesDiario: Number(formParams.interesDiario) || defaultParams.interesDiario,
+      principalDiario: Number(formParams.principalDiario) || defaultParams.principalDiario,
+      motosIniciales: Number(formParams.motosIniciales) || defaultParams.motosIniciales,
+      dias: Number(formParams.dias) || defaultParams.dias,
+      diasPorMes: Number(formParams.diasPorMes) || defaultParams.diasPorMes,
+    };
+    setSimulationParams(validatedParams);
+  };
+
+  const { dailyData, monthlyData, summary, isCalculating } = useSimulationLogic(simulationParams);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -71,7 +93,11 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <ParametersForm onParametersChange={setParams} initialParams={params} />
+        <ParametersForm 
+          params={formParams} 
+          onParametersChange={setFormParams} 
+          onApplyChanges={handleApplyChanges}
+        />
 
         {isCalculating ? (
           <div className="flex justify-center items-center py-12">
@@ -82,7 +108,7 @@ function App() {
             <SummaryCards summary={summary} />
             <SimulationChart monthlyData={monthlyData} />
             <MonthlyTable monthlyData={monthlyData} />
-            <PDFExport params={params} summary={summary} monthlyData={monthlyData} />
+            <PDFExport params={simulationParams} summary={summary} monthlyData={monthlyData} />
           </>
         )}
       </main>
