@@ -1,8 +1,8 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export const ParametersForm = ({ onParametersChange }) => {
-  const [params, setParams] = useState({
+export const ParametersForm = ({ onParametersChange, initialParams }) => {
+  const [params, setParams] = useState(initialParams || {
     valorMoto: 6216000,
     pagoDiario: 21000,
     interesDiario: 7000,
@@ -13,14 +13,70 @@ export const ParametersForm = ({ onParametersChange }) => {
     tipoCashDisponible: 'pagoRecibido'
   });
 
+  const isMounted = useRef(false);
+  const isInternalUpdate = useRef(false);
+  const lastSyncedParams = useRef(null);
+
+  // Sincronizar solo en el mount inicial
+  useEffect(() => {
+    if (!isMounted.current && initialParams) {
+      setParams(initialParams);
+      lastSyncedParams.current = JSON.stringify(initialParams);
+      isMounted.current = true;
+    }
+  }, []); // Solo ejecutar en mount
+
+  // Sincronizar cuando initialParams cambia desde fuera (ej: otra pestaña)
+  // pero NO cuando el cambio viene de nuestras propias actualizaciones
+  useEffect(() => {
+    if (isMounted.current && !isInternalUpdate.current && initialParams) {
+      const currentInitialStr = JSON.stringify(initialParams);
+      const lastSyncedStr = lastSyncedParams.current;
+      const currentLocalStr = JSON.stringify(params);
+      
+      // Solo sincronizar si:
+      // 1. Realmente cambió desde la última sincronización
+      // 2. El estado local es diferente del initialParams (cambio externo real)
+      // 3. NO es una actualización interna
+      if (currentInitialStr !== lastSyncedStr && currentLocalStr !== currentInitialStr) {
+        setParams(initialParams);
+        lastSyncedParams.current = currentInitialStr;
+      } else if (currentInitialStr !== lastSyncedStr) {
+        // Actualizar la referencia aunque no cambiemos el estado
+        lastSyncedParams.current = currentInitialStr;
+      }
+    }
+    // Resetear el flag después de procesar (con un pequeño delay para asegurar que se procesó)
+    setTimeout(() => {
+      isInternalUpdate.current = false;
+    }, 100);
+  }, [initialParams]);
+
   const handleChange = (field, value) => {
     let processedValue = value;
     if (field !== 'tipoCashDisponible') {
-      processedValue = parseFloat(value) || 0;
+      // Permitir valores como string mientras el usuario escribe
+      // Solo convertir a número si es un valor válido
+      if (value === '' || value === '-' || value === '.') {
+        // Mantener como string para permitir escritura continua
+        processedValue = value;
+      } else {
+        const numValue = parseFloat(value);
+        processedValue = isNaN(numValue) ? 0 : numValue;
+      }
     }
     const newParams = { ...params, [field]: processedValue };
+    
+    // Actualizar estado local inmediatamente
     setParams(newParams);
-    onParametersChange(newParams);
+    
+    // Marcar que este es un cambio interno
+    isInternalUpdate.current = true;
+    
+    // Notificar al padre solo si el valor es numérico válido
+    if (field === 'tipoCashDisponible' || (typeof processedValue === 'number' && !isNaN(processedValue))) {
+      onParametersChange(newParams);
+    }
   };
 
   const formatCurrency = (value) => {
@@ -31,29 +87,55 @@ export const ParametersForm = ({ onParametersChange }) => {
     }).format(value);
   };
 
-  const InputField = ({ label, value, onChange, type = "number", min, max, step, helperText, icon }) => (
-    <div className="bg-gradient-to-br from-white to-gray-50 p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
-      <label className="flex items-center text-xs font-semibold text-gray-700 mb-2">
-        {icon && <span className="mr-2 text-blue-600">{icon}</span>}
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          min={min}
-          max={max}
-          step={step}
-          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-medium text-gray-900 placeholder-gray-400"
-        />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full opacity-60"></div>
+  const InputField = ({ label, value, onChange, onBlur, type = "number", min, max, step, helperText, icon }) => {
+    // Estado local para el valor del input (como string para permitir escritura parcial)
+    const [localValue, setLocalValue] = useState(String(value || ''));
+    
+    // Sincronizar cuando el valor prop cambia desde fuera
+    useEffect(() => {
+      setLocalValue(String(value || ''));
+    }, [value]);
+    
+    const handleInputChange = (e) => {
+      const newValue = e.target.value;
+      setLocalValue(newValue); // Actualizar estado local inmediatamente
+      onChange(e); // Llamar al onChange del padre
+    };
+    
+    const handleBlur = (e) => {
+      // Al perder el foco, asegurar que el valor sea válido
+      const numValue = parseFloat(e.target.value) || 0;
+      setLocalValue(String(numValue));
+      if (onBlur) {
+        onBlur(e);
+      }
+    };
+    
+    return (
+      <div className="bg-gradient-to-br from-white to-gray-50 p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
+        <label className="flex items-center text-xs font-semibold text-gray-700 mb-2">
+          {icon && <span className="mr-2 text-blue-600">{icon}</span>}
+          {label}
+        </label>
+        <div className="relative">
+          <input
+            type={type}
+            value={localValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            min={min}
+            max={max}
+            step={step}
+            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm font-medium text-gray-900 placeholder-gray-400"
+          />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full opacity-60"></div>
+          </div>
         </div>
+        <p className="text-xs text-gray-600 mt-1.5 font-medium">{helperText}</p>
       </div>
-      <p className="text-xs text-gray-600 mt-1.5 font-medium">{helperText}</p>
-    </div>
-  );
+    );
+  };
 
   const SelectField = ({ label, value, onChange, options, helperText, icon }) => (
     <div className="bg-gradient-to-br from-white to-gray-50 p-3 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md">

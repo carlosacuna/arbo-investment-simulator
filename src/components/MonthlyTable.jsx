@@ -36,22 +36,28 @@ export const MonthlyTable = ({ monthlyData }) => {
                 Mes
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Motos Totales
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Motos Activas
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Pago Recibido
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Interés Ganado
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Nuevas Motos
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Pago Recibido
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Inversión Total
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Cash Disponible
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Motos Totales
+                Pago Acumulado
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Interés Ganado
               </th>
             </tr>
           </thead>
@@ -61,23 +67,29 @@ export const MonthlyTable = ({ monthlyData }) => {
                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                   Mes {month.mes}
                 </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">
+                  {month.motosTotales}
+                </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
                   {Math.round(month.motosActivasPromedio)}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                  {formatCurrency(month.pagoRecibidoTotal)}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                  {formatCurrency(month.interesGanadoTotal)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
                   {month.nuevasMotasTotal}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {formatCurrency(month.pagoRecibidoTotal)}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {formatCurrency(month.inversionTotal)}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-blue-600 text-right">
                   {formatCurrency(month.cashDisponible)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 text-right">
-                  {month.motosTotales}
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {formatCurrency(month.pagoRecibidoAcumulado)}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {formatCurrency(month.interesGanadoTotal)}
                 </td>
               </tr>
             ))}

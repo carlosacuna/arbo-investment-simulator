@@ -48,15 +48,51 @@ const calculateSimulation = (params) => {
 
   // Variables de estado
   let motosActivas = motosIniciales;
+  let motosGenerandoIngresos = motosIniciales; // Motos que realmente generan ingresos hoy
   let motosTotales = motosIniciales;
   let cashDisponible = 0;
+  let mesActual = 1;
+  let nuevasMotosEsteMes = 0; // Rastrear nuevas motos compradas en el mes actual
+
+  // Variables para acumulados
+  let pagoRecibidoAcumulado = 0;
+  let inversionTotal = 0; // Solo cuenta reinversiones en nuevas motos
 
   // Simulación diaria
   for (let dia = 1; dia <= dias; dia++) {
-    // Cálculos del día
-    const pagoRecibido = motosActivas * pagoDiario;
-    const interesGanado = motosActivas * interesDiario;
-    const principalDevuelto = motosActivas * principalDiario;
+    const mesAprox = Math.ceil(dia / diasPorMes);
+    
+    // Si es un nuevo mes, las nuevas motos compradas el mes anterior ahora pueden generar ingresos
+    if (mesAprox > mesActual) {
+      motosGenerandoIngresos = motosActivas; // Todas las motos activas ahora generan ingresos
+      nuevasMotosEsteMes = 0; // Reiniciar contador para el nuevo mes
+      mesActual = mesAprox;
+    }
+
+    // Al inicio del día, verificar si se puede comprar una nueva moto
+    // (usando el cash disponible acumulado hasta el día anterior)
+    // Las nuevas motos compradas este mes NO generarán ingresos hasta el mes siguiente
+    let nuevasMotos = 0;
+    let inversionDelDia = 0;
+    if (cashDisponible >= valorMoto) {
+      nuevasMotos = Math.floor(cashDisponible / valorMoto);
+      inversionDelDia = nuevasMotos * valorMoto;
+      inversionTotal += inversionDelDia;
+      cashDisponible = cashDisponible % valorMoto; // Resto después de comprar
+      motosTotales += nuevasMotos;
+      motosActivas += nuevasMotos;
+      nuevasMotosEsteMes += nuevasMotos;
+      // Las nuevas motos se activan hoy, pero NO generan ingresos hasta el mes siguiente
+    }
+
+    // Cálculos del día (solo con las motos que realmente generan ingresos hoy)
+    // Las nuevas motos compradas este mes no generan ingresos hasta el mes siguiente
+    const pagoRecibido = motosGenerandoIngresos * pagoDiario;
+    const interesGanado = motosGenerandoIngresos * interesDiario;
+    const principalDevuelto = motosGenerandoIngresos * principalDiario;
+
+    // Acumular pago recibido total
+    pagoRecibidoAcumulado += pagoRecibido;
 
     // El cash se acumula según el tipo configurado
     if (tipoCashDisponible === 'pagoRecibido') {
@@ -65,40 +101,37 @@ const calculateSimulation = (params) => {
       cashDisponible += interesGanado;
     }
 
-    // Verificar si se puede comprar una nueva moto
-    let nuevasMotos = 0;
-    if (cashDisponible >= valorMoto) {
-      nuevasMotos = Math.floor(cashDisponible / valorMoto);
-      cashDisponible = cashDisponible % valorMoto; // Resto después de comprar
-      motosTotales += nuevasMotos;
-      motosActivas += nuevasMotos;
-    }
-
     // Guardar datos diarios
-    const mesAprox = Math.ceil(dia / diasPorMes); // Usar días por mes configurados
     daily.push({
       dia,
       mes: mesAprox,
-      motosActivas,
+      motosActivas: motosGenerandoIngresos, // Solo las que generan ingresos hoy
       pagoRecibido,
       interesGanado,
       principalDevuelto,
       nuevasMotos,
       cashDisponible,
-      motosTotales
+      motosTotales,
+      pagoRecibidoAcumulado,
+      inversionTotal,
+      pagoAcumuladoNeto: pagoRecibidoAcumulado - inversionTotal
     });
 
     // Agregar datos mensuales (al final de cada mes aproximado)
     if (dia % diasPorMes === 0 || dia === dias) {
-      const mesData = daily.slice(-diasPorMes).reduce((acc, day) => ({
+      const diasDelMes = dia % diasPorMes === 0 ? diasPorMes : dia % diasPorMes;
+      const mesData = daily.slice(-diasDelMes).reduce((acc, day) => ({
         mes: mesAprox,
-        motosActivasPromedio: acc.motosActivasPromedio + day.motosActivas / Math.min(diasPorMes, daily.length),
+        motosActivasPromedio: acc.motosActivasPromedio + day.motosActivas / diasDelMes,
         pagoRecibidoTotal: acc.pagoRecibidoTotal + day.pagoRecibido,
         interesGanadoTotal: acc.interesGanadoTotal + day.interesGanado,
         principalDevueltoTotal: acc.principalDevueltoTotal + day.principalDevuelto,
         nuevasMotasTotal: acc.nuevasMotasTotal + day.nuevasMotos,
         cashDisponible: day.cashDisponible,
-        motosTotales: day.motosTotales
+        motosTotales: day.motosTotales,
+        pagoRecibidoAcumulado: day.pagoRecibidoAcumulado,
+        inversionTotal: day.inversionTotal,
+        pagoAcumuladoNeto: day.pagoAcumuladoNeto
       }), {
         motosActivasPromedio: 0,
         pagoRecibidoTotal: 0,
@@ -106,7 +139,10 @@ const calculateSimulation = (params) => {
         principalDevueltoTotal: 0,
         nuevasMotasTotal: 0,
         cashDisponible: 0,
-        motosTotales: 0
+        motosTotales: 0,
+        pagoRecibidoAcumulado: 0,
+        inversionTotal: 0,
+        pagoAcumuladoNeto: 0
       });
 
       monthly.push(mesData);

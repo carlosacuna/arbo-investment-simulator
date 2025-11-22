@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSimulationLogic } from './hooks/useSimulationLogic';
 import { ParametersForm } from './components/ParametersForm';
 import { SummaryCards } from './components/SummaryCards';
@@ -6,17 +6,43 @@ import { SimulationChart } from './components/SimulationChart';
 import { MonthlyTable } from './components/MonthlyTable';
 import { PDFExport } from './components/PDFExport';
 
+const STORAGE_KEY = 'arbo-investment-params';
+
+const defaultParams = {
+  valorMoto: 6250000,
+  pagoDiario: 21000,
+  interesDiario: 7000,
+  principalDiario: 14000,
+  motosIniciales: 1,
+  dias: 1560,
+  diasPorMes: 26,
+  tipoCashDisponible: 'pagoRecibido'
+};
+
 function App() {
-  const [params, setParams] = useState({
-    valorMoto: 6216000,
-    pagoDiario: 21000,
-    interesDiario: 7000,
-    principalDiario: 14000,
-    motosIniciales: 1,
-    dias: 1560,
-    diasPorMes: 26,
-    tipoCashDisponible: 'pagoRecibido'
+  // Cargar parámetros desde localStorage al iniciar
+  const [params, setParams] = useState(() => {
+    try {
+      const savedParams = localStorage.getItem(STORAGE_KEY);
+      if (savedParams) {
+        const parsed = JSON.parse(savedParams);
+        // Validar que todos los campos necesarios estén presentes
+        return { ...defaultParams, ...parsed };
+      }
+    } catch (error) {
+      console.error('Error al cargar parámetros desde localStorage:', error);
+    }
+    return defaultParams;
   });
+
+  // Guardar parámetros en localStorage cuando cambien
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(params));
+    } catch (error) {
+      console.error('Error al guardar parámetros en localStorage:', error);
+    }
+  }, [params]);
 
   const { dailyData, monthlyData, summary, isCalculating } = useSimulationLogic(params);
 
@@ -45,7 +71,7 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <ParametersForm onParametersChange={setParams} />
+        <ParametersForm onParametersChange={setParams} initialParams={params} />
 
         {isCalculating ? (
           <div className="flex justify-center items-center py-12">

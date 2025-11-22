@@ -10,6 +10,12 @@ export const SummaryCards = ({ summary }) => {
 
   const cards = [
     {
+      title: 'Inversión Inicial',
+      value: formatCurrency(summary.totalInvertido || 0),
+      icon: '💳',
+      color: 'bg-indigo-500'
+    },
+    {
       title: 'Motos Totales Proyectadas',
       value: summary.motosFinales || 0,
       icon: '🏍️',
@@ -36,7 +42,7 @@ export const SummaryCards = ({ summary }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
       {cards.map((card, index) => (
         <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className={`${card.color} p-4`}>
