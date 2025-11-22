@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export const PDFExport = memo(({ params, summary, monthlyData }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -76,7 +76,7 @@ export const PDFExport = memo(({ params, summary, monthlyData }) => {
         ['Tipo Acumulación', params.tipoCashDisponible === 'pagoRecibido' ? 'Pago Recibido' : 'Interés Ganado']
       ];
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: yPosition,
         head: [['Parámetro', 'Valor']],
         body: parametros,
@@ -110,7 +110,7 @@ export const PDFExport = memo(({ params, summary, monthlyData }) => {
         ['Intereses Totales Generados', formatCurrency(summary.interesesTotales)]
       ];
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: yPosition,
         head: [['Métrica', 'Valor']],
         body: resultados,
@@ -145,7 +145,7 @@ export const PDFExport = memo(({ params, summary, monthlyData }) => {
         String(month.motosTotales || 0)
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: yPosition,
         head: [['Mes', 'Motos Act.', 'Pago Rec.', 'Interés', 'Nuevas', 'Cash Disp.', 'Total']],
         body: monthlyTableData,
